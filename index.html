@@ -83,6 +83,11 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Markdown Styles for AI Content */
+        .prose h1, .prose h2, .prose h3 { color: #166534; margin-bottom: 0.5rem; font-weight: 700; }
+        .prose p { margin-bottom: 0.8rem; line-height: 1.6; }
+        .prose strong { color: #15803d; }
     </style>
 </head>
 <body class="text-slate-800 relative">
@@ -108,7 +113,7 @@
                 <p class="text-green-200 text-sm mt-1">수업 전과 후, 나의 마음이 얼마나 자랐나요?</p>
             </div>
             <button onclick="openApiKeyModal()" class="bg-green-900 bg-opacity-50 hover:bg-opacity-100 px-3 py-1 rounded text-xs flex items-center gap-1 transition-all">
-                <span>⚙️ AI Key</span>
+                <span>⚙️ API Key</span>
             </button>
         </div>
     </header>
@@ -161,22 +166,22 @@
                 <!-- AI Writer Card -->
                 <div class="bg-gradient-to-br from-green-50 to-white p-6 rounded-xl shadow-md border border-green-200">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-bold text-green-800">✨ AI 성장 자서전</h3>
+                        <h3 class="font-bold text-green-800">✨ AI 생태 자서전</h3>
                         <span class="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full">Gemini Pro</span>
                     </div>
                     <p class="text-xs text-slate-600 mb-4">
-                        여러분의 성장 데이터를 바탕으로 AI가 '나의 초록색 자서전'을 써줍니다. 
-                        수업 전과 후가 어떻게 달라졌는지 확인해보세요.
+                        나의 성장 기록을 바탕으로 장남들의 생명들과 어우러지는 이야기를 만들어줍니다.
                     </p>
                     
-                    <button id="generateBtn" onclick="generateGrowthStory()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow transition-colors flex items-center justify-center gap-2">
-                        <span>📝 내 이야기 만들기</span>
+                    <button id="generateBtn" onclick="generateGrowthStory()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow transition-colors flex items-center justify-center gap-2 group">
+                        <span class="group-hover:scale-110 transition-transform">📝</span>
+                        <span>내 이야기 만들기</span>
                     </button>
 
-                    <div id="aiResponseContainer" class="mt-4 hidden bg-white p-4 rounded-lg border border-green-100 text-sm leading-relaxed text-slate-700 max-h-60 overflow-y-auto">
+                    <div id="aiResponseContainer" class="mt-4 hidden bg-white p-5 rounded-lg border border-green-100 text-sm leading-relaxed text-slate-700 max-h-80 overflow-y-auto prose prose-sm">
                         <div id="aiLoading" class="flex flex-col items-center py-4">
                             <div class="loader mb-2"></div>
-                            <span class="text-xs text-green-600">Gemini가 변화를 분석 중입니다...</span>
+                            <span class="text-xs text-green-600 animate-pulse">Gemini가 장남들의 바람 소리를 듣고 있어요...</span>
                         </div>
                         <div id="aiResult"></div>
                     </div>
@@ -444,26 +449,29 @@
             result.innerHTML = '';
             btn.disabled = true;
 
-            // 변화량 계산
-            const diffPlace = (state.averages.after.placeId - state.averages.before.placeId).toFixed(1);
-            const diffTotal = (state.totalAvg.after - state.totalAvg.before).toFixed(1);
+            // 변화량 계산 (단순 추세 확인용, 프롬프트에서 숫자는 숨김)
+            const diffPlace = (state.averages.after.placeId - state.averages.before.placeId);
+            const diffConnect = (state.averages.after.connectedness - state.averages.before.connectedness);
 
             const prompt = `
-                당신은 13살 초등학생의 마음을 읽어주는 따뜻한 AI 작가입니다.
-                이 학생이 '장남들 환경 수업'을 12주 동안 듣고 난 후의 정체성 변화 데이터입니다.
-                
-                [수업 전 vs 수업 후 변화]
-                1. 총점 변화: ${state.totalAvg.before}점 -> ${state.totalAvg.after}점 (${diffTotal > 0 ? '+' + diffTotal : diffTotal} 성장)
-                2. 장소 정체성(장남들): ${state.averages.before.placeId}점 -> ${state.averages.after.placeId}점
-                3. 연결감: ${state.averages.before.connectedness}점 -> ${state.averages.after.connectedness}점
-                
-                [요청사항]
-                이 데이터를 바탕으로, 학생이 1인칭("나") 시점에서 자신의 변화를 회고하는 **'나의 성장 자서전'**을 써주세요.
-                
-                - 글의 흐름: "옛날의 나는...(수업 전 점수 반영)" -> "하지만 12주 동안 장남들을 만나고...(수업 내용 회상)" -> "지금의 나는...(수업 후 점수 반영)"
-                - 특히 '장남들(장소 정체성)' 점수가 올랐다면, 그 장소가 나에게 얼마나 소중해졌는지 강조해주세요.
-                - 분량: 3문단 내외. 따뜻하고 감동적으로.
-                - 제목: 멋진 비유가 들어간 제목을 붙여주세요.
+                당신은 그림책 '나는 강물처럼 말해요'의 작가처럼 시적이고 아름다운 문체로 글을 쓰는 AI입니다.
+                초등학교 6학년 학생이 12주 동안 세종시 '장남들 평야'에서 생태 수업을 들었습니다.
+                아래는 이 학생의 내면 변화를 나타내는 데이터입니다.
+
+                [변화 데이터 - 참고만 하고 절대 숫자를 직접 언급하지 마세요]
+                - 자연과의 거리: ${diffConnect > 0 ? '더 가까워짐' : '여전함'}
+                - 장소(장남들)에 대한 애착: ${state.averages.after.placeId >= 4 ? '매우 깊어짐' : '생기기 시작함'}
+                - 수업 후 장소 정체성 상태: ${state.averages.after.placeId >= 4 ? '장남들과 하나가 됨' : '장남들을 알아가는 중'}
+
+                [글쓰기 규칙 - 매우 중요]
+                1. **점수나 숫자를 절대 쓰지 마세요.** (예: "3점에서 5점으로 올랐다" X) 대신 마음의 변화를 자연물에 빗대어 표현하세요.
+                2. **문체:** "나는 강물처럼 말해요"처럼 서정적이고 감동적인 1인칭 시점. 문장은 짧고 울림 있게.
+                3. **필수 포함 소재:** 장남들의 친구들인 **금개구리, 흑두루미, 고라니, 고니, 갈대** 중 3가지 이상을 반드시 비유의 대상으로 사용하세요.
+                4. **내용 흐름:**
+                   - (과거) 삭막하고 무심했던 나의 마음 (예: 메마른 논바닥 같았던 나).
+                   - (만남) 장남들에서 그 생명들을 자세히 들여다보던 순간.
+                   - (현재) 이제는 그들처럼 생각하고 행동하게 된 나의 다짐 (예: 나는 금개구리처럼 노래해요).
+                5. 제목: 멋진 비유가 담긴 제목.
             `;
 
             try {
@@ -474,6 +482,9 @@
                 });
 
                 const data = await response.json();
+                
+                if(data.error) throw new Error(data.error.message);
+
                 const aiText = data.candidates[0].content.parts[0].text;
                 result.innerHTML = marked.parse(aiText);
 
